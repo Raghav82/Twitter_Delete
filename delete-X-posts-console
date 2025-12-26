@@ -1,0 +1,214 @@
+
+/**
+ * X (Twitter) Mass Delete – UI Automation (No tokens required)
+ * ------------------------------------------------------------
+ * - On your profile tab (Posts or Replies), iterates visible tweet cards. * What it does:
+ * - Opens each tweet's overflow (More) menu.
+ * - Clicks "Delete" and confirms; if not found, attempts "Undo repost".
+ * - Scrolls to load more content and repeats until no more items are actionable.
+ *
+ * Why this approach:
+ * - I was unable to download my twitter archive due to a bug so I couldn't use the othe rpopular method linked above
+ * - Uses the same UI flows you would click manually (no API keys or external tools).
+ * - Works with your existing logged-in session in the browser.
+ *
+ * IMPORTANT
+ * - Irreversible: Deletions cannot be undone. Export your archive first.
+ * -  Rate limits: Backend limits still apply (~50 deletes / 15 minutes; 300 / 3 hours). [1](https://docs.x.com/x-api/posts/manage-tweets/introduction)
+ * -  Fragile selectors: X’s UI/DOM changes. You may need to tweak selectors over time. [2](https://stackoverflow.com/questions/64863099/deleting-tweets-with-js-console)
+ *
+ * References:
+ * - Manage Posts (official docs; rate limits, auth requirements) [1](https://docs.x.com/x-api/posts/manage-tweets/introduction)
+ * - Examples of UI selectors & timing issues discussed by community (StackOverflow) [2](https://stackoverflow.com/questions/64863099/deleting-tweets-with-js-console)
+ * - Community console scripts (blog/gist) illustrating similar DOM strategies [3](https://chrissmith.xyz/blog/2024/bulk-deleting-tweets/)[4](https://gist.github.com/lucahammer/1aa16b4d3c1fb04035839da5ef699d65)
+ */
+
+// ------------------------------
+// Tunable pacing to reduce 429s:
+// ------------------------------
+const CLICK_DELAY_MS = 1200;   // Delay after clicks (open menu, confirm, etc.)
+const SCROLL_DELAY_MS = 1800;  // Wait after scroll to let new tweets render
+const MAX_RETRIES = 3;         // Retries for opening menu / finding actions
+const SHORT_PAUSE_MS = 500;    // Small spacing between tweets
+
+// ------------------------------
+// Progress counters (for logs):
+// ------------------------------
+let totalDeleted = 0;
+let totalUndoneReposts = 0;
+
+// ------------------------------
+// Utility helpers:
+// ------------------------------
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+/**
+ * Waits for a CSS selector to appear within `timeout` ms.
+ */
+const waitFor = async (selector, timeout = 8000) => {
+  const start = performance.now();
+  while (performance.now() - start < timeout) {
+    const el = document.querySelector(selector);
+    if (el) return el;
+    await sleep(100);
+  }
+  return null;
+};
+
+/**
+ * Clicks an element if present and awaits a short delay.
+ */
+const clickIfExists = async (el) => {
+  if (!el) return false;
+  el.click();
+  await sleep(CLICK_DELAY_MS);
+  return true;
+};
+
+// ------------------------------
+// DOM accessor helpers:
+// ------------------------------
+
+/**
+ * Returns the tweet card "More" menu button.
+ * X commonly uses data-testid="caret" or aria-label="More" in the tweet toolbar. [2](https://stackoverflow.com/questions/64863099/deleting-tweets-with-js-console)
+ */
+const findMenuButton = (tweetCard) =>
+  tweetCard.querySelector('[data-testid="caret"], [aria-label="More"]');
+
+/**
+ * Finds a visible "Delete" item within the open menu by text.
+ * Note: This is language dependent. If UI is not English, consider adding translations here.
+ */
+const findDeleteButton = () =>
+  Array.from(document.querySelectorAll('span'))
+    .find(s => s.textContent.trim().toLowerCase() === 'delete');
+
+/**
+ * Finds a visible "Undo repost" item within the open menu.
+ * Variants cover different capitalization and legacy "Retweet" text.
+ */
+const findUndoRepostButton = () => {
+  const variants = ['Undo repost', 'Undo Repost', 'Remove repost', 'Remove Retweet', 'Undo Retweet'];
+  return Array.from(document.querySelectorAll('span'))
+    .find(s => variants.includes(s.textContent.trim()));
+};
+
+/**
+ * Confirmation button on the sheet that appears after choosing "Delete".
+ * X often uses data-testid="confirmationSheetConfirm". [2](https://stackoverflow.com/questions/64863099/deleting-tweets-with-js-console)
+ */
+const findConfirmDelete = () =>
+  document.querySelector('[data-testid="confirmationSheetConfirm"], [data-testid="confirmationSheetConfirm"] [role="button"]');
+
+/**
+ * Tries to ensure we only act on tweets authored by the currently viewed profile.
+ * This helps when running on the "Replies" tab where non-self tweets can appear.
+ */
+const isAuthoredByProfile = (tweetCard) => {
+  // Extract handle from the profile URL: https://x.com/<handle>
+  const handle = (location.pathname.split('/')[1] || '').toLowerCase();
+  if (!handle) return true; // Fallback: assume yes if we can't parse handle
+
+  // Find a canonical /status/<id> link and check the path contains our handle.
+  const link = Array.from(tweetCard.querySelectorAll('a[href*="/status/"]'))
+    .find(a => /\/status\/\d+/.test(a.href));
+  if (!link) return true; // If we can't determine, allow processing
+
+  try {
+    const url = new URL(link.href);
+    const author = (url.pathname.split('/')[1] || '').toLowerCase();
+    return author === handle;
+  } catch {
+    return true;
+  }
+};
+
+// ------------------------------
+// Per-tweet processing routine:
+// ------------------------------
+const processTweet = async (tweetCard) => {
+  // Optional: skip tweets not authored by the profile (useful on Replies tab)
+  if (!isAuthoredByProfile(tweetCard)) {
+    return false;
+  }
+
+  // 1) Open the overflow menu
+  for (let i = 0; i < MAX_RETRIES; i++) {
+    const menuBtn = findMenuButton(tweetCard);
+    if (await clickIfExists(menuBtn)) break;
+    await sleep(CLICK_DELAY_MS);
+  }
+
+  // 2) Try to delete the tweet
+  let btn = findDeleteButton();
+  if (btn) {
+    btn.click();
+    await sleep(CLICK_DELAY_MS);
+
+    const confirm = await waitFor('[data-testid="confirmationSheetConfirm"]', 6000);
+    if (confirm) {
+      confirm.click();
+      totalDeleted++;
+      console.log(`🗑️ Deleted post. Count=${totalDeleted}`);
+      await sleep(CLICK_DELAY_MS);
+      return true;
+    }
+  }
+
+  // 3) If not deletable, try "Undo repost"
+  btn = findUndoRepostButton();
+  if (btn) {
+    btn.click();
+    await sleep(CLICK_DELAY_MS);
+
+    const confirm = findConfirmDelete();
+    if (confirm) confirm.click();
+
+    totalUndoneReposts++;
+    console.log(`🔁 Undid repost. Count=${totalUndoneReposts}`);
+    await sleep(CLICK_DELAY_MS);
+    return true;
+  }
+
+  // Nothing actionable found (e.g., someone else’s tweet in thread)
+  return false;
+};
+
+// ------------------------------
+// Main loop: iterate → scroll → repeat
+// ------------------------------
+const run = async () => {
+  console.log('Starting deletion… Keep this tab focused. You can adjust delays if needed.');
+  let processedInPass = 0;
+
+  while (true) {
+    const tweets = Array.from(document.querySelectorAll('article[data-testid="tweet"]'));
+
+    // If no tweets are currently visible, scroll to load more
+    if (tweets.length === 0) {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      await sleep(SCROLL_DELAY_MS);
+    }
+
+    processedInPass = 0;
+
+    for (const card of tweets) {
+      const didSomething = await processTweet(card);
+      if (didSomething) processedInPass++;
+      await sleep(SHORT_PAUSE_MS); // small spacing between items
+    }
+
+    // If we didn't find anything actionable this pass, try one last scroll
+    if (processedInPass === 0) {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      await sleep(SCROLL_DELAY_MS);
+      const moreTweets = document.querySelectorAll('article[data-testid="tweet"]');
+      if (moreTweets.length === 0) break; // no more content
+    }
+  }
+
+  console.log(`✅ Finished. Deleted=${totalDeleted}, UndidReposts=${totalUndoneReposts}`);
+};
+
+run();

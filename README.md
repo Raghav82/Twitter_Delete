@@ -12,7 +12,7 @@
 <h1>X (Twitter) Mass Delete – UI Automation (No Tokens Required)</h1>
 
 <h2>Why This Approach?</h2>
-<p>I created this script because I was <strong>unable to download my Twitter archive</strong> due to a bug, which prevented me from using the other popular archive-based deletion method. This solution uses the same UI flows you would click manually, making it simple and accessible.</p>
+<p>I created this script because I was <strong>unable to download my Twitter archive</strong> due to a bug, which prevented me from using the other popular archive-based deletion method. This solution uses the same UI flows you would click manually, making it simple and accessible. It is slow and you need to keep the tab in foreground for best results but you can speed it up by changing the constants. </p>
 
 <h2>Features</h2>
 <ul>

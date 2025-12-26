@@ -3,49 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>X (Twitter) Mass Delete – README</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 20px;
-            max-width: 900px;
-        }
-        h1, h2 {
-            color: #333;
-        }
-        h1 {
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-        }
-        code {
-            background-color: #f4f4f4;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-        pre {
-            background-color: #f4f4f4;
-            padding: 10px;
-            border-radius: 6px;
-            overflow-x: auto;
-        }
-        ul, ol {
-            margin-left: 20px;
-        }
-        a {
-            color: #007acc;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        .important {
-            color: #b30000;
-            font-weight: bold;
-        }
-    </style>
 </head>
 <body>
 
@@ -65,11 +23,11 @@
     <li>Scrolls to load more tweets and repeats until no more actionable items remain.</li>
 </ul>
 
-<h2 class="important">Important Notes</h2>
+<h2>Important Notes</h2>
 <ul>
-    <li><span class="important">Irreversible:</span> Deletions cannot be undone. If possible, export your archive first.</li>
-    <li><span class="important">Rate Limits:</span> Backend limits still apply (~50 deletes per 15 minutes; ~300 per 3 hours). <a href="https://docs.x.com/x-api/posts/manage-tweetstionOfficial Docs</a></li>
-    <li><span class="important">Fragile Selectors:</span> X’s UI/DOM may change over time. You might need to tweak selectors. <a href="https://stackoverflow.com/questions/64863099/deeets-with-js-consoleCommunity Discussion</a></li>
+    <li><strong>Irreversible:</strong> Deletions cannot be undone. If possible, export your archive first.</li>
+    <li><strong>Rate Limits:</strong> Backend limits still apply (~50 deletes per 15 minutes; ~300 per 3 hours). <a href="ocs.x.com/x-api/posts/manage-tweets/introductionOfficial Docs</a></li>
+    <li><strong>Fragile Selectors:</strong> X’s UI/DOM may change over time. You might need to tweak selectors. <a href="https://stackoverflow.com/questions/deleting-tweets-with-js-consoleCommunity Discussion</a></li>
 </ul>
 
 <h2>How to Use</h2>
@@ -92,9 +50,9 @@ const SHORT_PAUSE_MS = 500;    // Small spacing between tweets
 <h2>References</h2>
 <ul>
     <li>https://docs.x.com/x-api/posts/manage-tweets/introductionManage Posts – Official Docs</a></li>
-    <li><a href="https://stackoverflowtions/64863099/deleting-tweets-with-js-consoleStackOverflow Discussion on UI Selectors</a></li>
-    <li><a href="https://chrissblog/2024/bulk-deleting-tweets/Community Scripts &amp; Blog Posts</a></li>
-    <li><a href="https://gist.github.com/lucahammer/1aa16b4d3c1fb04035839da5ef699d65ple</a></li>
+    <li>https://stackoverflow.com/questions/64863099/deleting-tweets-with-js-consoleStackOverflow Discussion on UI Selectors</a></li>
+    <li><a href="https://chrissmith.xyz/blog/2024/bulk-deleting-tmunity Scripts &amp; Blog Posts</a></li>
+    <li><a href="https://gist.github.com/lucahammer/1aab04035839da5ef699d65Gist Example</a></li>
 </ul>
 
 <h2>Disclaimer</h2>
@@ -102,3 +60,4 @@ const SHORT_PAUSE_MS = 500;    // Small spacing between tweets
 
 </body>
 </html>
+``

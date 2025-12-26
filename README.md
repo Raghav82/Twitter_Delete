@@ -2,10 +2,6 @@
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>X (Twitter) Mass Delete – README</title>
-</head>
 <body>
 
 

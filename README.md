@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,10 +8,8 @@
 </head>
 <body>
 
-<h1>X (Twitter) Mass Delete – UI Automation (No Tokens Required)</h1>
 
-<h2>Overview</h2>
-<p>This script automates the deletion of tweets and undoing reposts directly through the X (Twitter) web interface. It mimics the manual steps you would take in the browser, requiring <strong>no API keys, tokens, or external tools</strong>. It works with your existing logged-in session.</p>
+<h1>X (Twitter) Mass Delete – UI Automation (No Tokens Required)</h1>
 
 <h2>Why This Approach?</h2>
 <p>I created this script because I was <strong>unable to download my Twitter archive</strong> due to a bug, which prevented me from using the other popular archive-based deletion method. This solution uses the same UI flows you would click manually, making it simple and accessible.</p>
